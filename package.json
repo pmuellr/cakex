@@ -1,0 +1,25 @@
+{
+  "name":               "cakex",
+  "version":            "0.1.0",
+  "description":        "extended functionality for cake",
+  "author":             "pmuellr",
+  "main":               "lib/cakex",
+  "scripts": {
+    "cake":             "cake",
+    "watch":            "cake watch"
+  },
+  "homepage":           "https://github.com/pmuellr/cakex",
+  "license":            "Apache-2.0",
+  "repository": {
+    "type":             "git",
+    "url" :             "https://github.com/pmuellr/cakex.git"
+  },
+  "dependencies": {
+    "coffee-script":    "1.9.x",
+    "gaze":             "0.5.x",
+    "shelljs":          "0.3.x",
+    "underscore":       "1.7.x"
+  },
+  "devDependencies": {
+  }
+}
