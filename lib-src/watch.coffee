@@ -9,21 +9,21 @@ Gaze = require("gaze").Gaze
 cakex = require("./cakex")
 
 #-------------------------------------------------------------------------------
-exports.watch = ({fileSpecs, run}) ->
-  gaze = new Gaze(fileSpecs)
+exports.watch = ({files, run}) ->
+  gaze = new Gaze(files)
 
   #------------------------------------
-  gaze.watched (err, files) ->
-    if err?
-      log "error getting watched files: #{err}"
-      return
+  cakex.log "watching #{countWatched gaze.relative()} files for changes ..."
 
-    log "watching #{files.length} files for changes ..."
-
+  fired = false
   #------------------------------------
   gaze.on "all", (event, file) ->
+    return if fired
+    fired = true
+
     if file?
       cakex.log "----------------------------------------------------"
+      file = path.relative process.cwd(), file
       cakex.log "file changed: #{file} on #{new Date}"
 
     try
@@ -34,7 +34,16 @@ exports.watch = ({fileSpecs, run}) ->
 
     gaze.close()
 
-    exports.watch {fileSpecs, run}
+    exports.watch {files, run}
+
+#-------------------------------------------------------------------------------
+countWatched = (rFiles) ->
+  count = 0
+
+  for dir, files of rFiles
+    count += files.length
+
+  return count
 
 #-------------------------------------------------------------------------------
 # Licensed under the Apache License, Version 2.0 (the "License");

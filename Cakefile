@@ -1,27 +1,29 @@
 # Licensed under the Apache License. See footer for details.
 
-process.on "uncaughtException", (e) ->
-  console.log e
-  console.log e.stack
-
 cakex = require "./lib/cakex"
 
 #-------------------------------------------------------------------------------
 task "watch", "watch for changes, build, test", ->
 
-  console.log "starting watches"
-  
+  log "starting watches"
+
   watch
-    files: "lib-src/*.coffee"
-    run: ->
-      invoke "build"
-      invoke "test"
+    files: "lib-src/**/*.coffee"
+    run:   onChanged
 
   watch
     files: "Cakefile"
-    run: ->
+    run: (file) ->
+      return unless file == "Cakefile"
       log "Cakefile changed, exiting"
       process.exit 0
+
+#-------------------------------------------------------------------------------
+onChanged = ->
+  invoke "build"
+  invoke "test"
+
+  log ls()
 
 #-------------------------------------------------------------------------------
 task "build", "build JavaScript from CoffeeScript", ->

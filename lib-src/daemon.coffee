@@ -13,6 +13,10 @@ process.on "SIGINT",            -> killAll()
 process.on "SIGTERM",           -> killAll()
 process.on "SIGTBREAK",         -> killAll()
 
+process.on "uncaughtException", (e) ->
+  log "uncaught exception: #{e}"
+  log e.stack
+
 #-------------------------------------------------------------------------------
 daemon.start = (pidFile, program, args, options={}) ->
   daemon.kill pidFile, ->

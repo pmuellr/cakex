@@ -6,7 +6,8 @@
   "main":               "lib/cakex",
   "scripts": {
     "cake":             "cake",
-    "watch":            "cake watch"
+    "watch":            "cake watch",
+    "compile":          "coffee --bare --compile --map --output lib lib-src/*.coffee"
   },
   "homepage":           "https://github.com/pmuellr/cakex",
   "license":            "Apache-2.0",
