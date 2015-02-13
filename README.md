@@ -88,11 +88,17 @@ pattern argument (string or array of strings).
 
 The `run` property is a function that will be called when a file matching
 the `files` patterns changes.  The function will be called with `this` set
-to the argument of the `watch()` function.  
+to the argument of the `watch()` function, and with a
+single argument file name of the file that triggered the
+watch.
 
 The watch will not respond to any other file changes until after the `run`
 function completes.
 
+You can call `watch()` multiple times.  There is no way to cancel a watch,
+so once you've called `watch()` at least once, your `cake` invocation will run
+forever; or until you break out of it, or the `Cakefile` calls `exit()` (or
+`process.exit()`).
 
 `daemon.start(handle, program, args, options={})`
 ---------------------------------------
@@ -132,6 +138,136 @@ The argument to this function should be the directory that contains the relevant
 `node_modules` directory.
 
 
+
+integration with `npm start`
+================================================================================
+
+To make life easier on your users, if you're using `cake` as your build tool,
+consider:
+
+* adding `coffee-script` to your `devDependencies` in your `package.json`
+* adding a `watch` and `cake` script to the `scripts` in your `package.json`
+* use `npm run watch` during development, which calls the `watch` script from
+  your `package.json`, which presumably does a `cake watch`
+
+The reason for structuring things this way is that you won't be dependent on
+a global install of the `coffee-script` package; that's a terrible way to live!
+
+Here's an examplefrom this package's `package.json`
+
+```json
+  "scripts": {
+    "cake":             "cake",
+    "watch":            "cake watch"
+  },
+  ...
+  "devDependencies": {
+    "coffee-script":    "1.9.x"
+  }
+
+```
+
+
+example `Cakefile`
+================================================================================
+
+Below is an example `Cakefile` that uses `cakex`.  It defines 3 tasks:
+`watch`, `build`, and `serve`.
+
+The `watch` task will run the `build` and `serve` tasks, then start watching
+source files for changes.  When a source file changes, the `build` and `serve`
+tasks are run again.  Because the `serve` task uses `daemon.start()`, the
+existing server (if any) is first stopped, and then restarted, presumably
+running the new code.  So as you're saving files in your editor, and you
+have `cake watch` (or maybe `npm run watch`) running in a terminal window,
+you see the build run, and server recycle, and then start waiting for your
+next save.
+
+The `build` task can be run stand-alone, if you just want to run a "build".
+
+The `server` task can also be run stand-alone, if you just want to run the
+server.
+
+In addition, if you make changes to the `Cakefile` while `cake watch` is
+running, the `cake` invocation will exit.  The rationale is that you've changed
+the `Cakefile`, and so to pick up the changes, you'll need to start over.
+
+```coffeescript
+# add this to the top of your Cakefile to cakex-ize it
+require "cakex"
+
+# I just always do this, often handy to get name, version, etc
+pkg = require "./package.json"
+
+#-------------------------------------------------------------------------------
+task "watch", "watch for source changes, build, restart server", -> taskWatch()
+task "build", "run a build",                                     -> taskBuild()
+task "serve", "run the server stand-alone",                      -> taskServe()
+
+# globs of my source files, to feed to `watch()`
+WatchSpec = "lib/**/* www/**/*"
+
+#-------------------------------------------------------------------------------
+# gotta have a tmp directory!
+#-------------------------------------------------------------------------------
+mkdir "-p", "tmp"
+
+#-------------------------------------------------------------------------------
+# this build doesn't do much, log a message; runs jshint
+#-------------------------------------------------------------------------------
+taskBuild = ->
+  log "linting ..."
+  jshint "lib/*.js"
+
+#-------------------------------------------------------------------------------
+# set up the things to watch, and what to do when the watches fire
+#-------------------------------------------------------------------------------
+taskWatch = ->
+  # run the build/serve/whatever steps when starting
+  watchIter()
+
+  # when a source file changes, run the build/serve/whatever steps
+  watch
+    files: WatchSpec.split " "
+    run:   watchIter
+
+  # when this file changes, kill `cake`; for some reason the gaze lib ends
+  # up watching other things besides this file, with this spec, so do an extra
+  # check in the `run` function
+  watch
+    files: "Cakefile"
+    run: (file) ->
+      return unless file == "Cakefile"
+      log "Cakefile changed, exiting"
+      exit 0
+
+#-------------------------------------------------------------------------------
+# stuff to do when a source file changes; do a build, restart the server;
+# handy to have it as a separate function so I can run it BEFORE watching
+# as well
+#-------------------------------------------------------------------------------
+watchIter = ->
+  log "in #{path.relative "../..", __dirname}"
+
+  taskBuild()
+  taskServe()
+
+#-------------------------------------------------------------------------------
+# start the server; if it's already running, shut it down, restart it
+#-------------------------------------------------------------------------------
+taskServe = ->
+  log "restarting server at #{new Date()}"
+
+  daemon.start "test server", "node", ["server"]
+
+#-------------------------------------------------------------------------------
+# handy utility to clear out build output dirs before a build
+#-------------------------------------------------------------------------------
+cleanDir = (dir) ->
+  mkdir "-p", dir
+  rm "-rf", "#{dir}/*"
+
+```
 
 
 hacking
