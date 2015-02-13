@@ -17,7 +17,7 @@ Add `cakex` to your `devDependencies` property of your `package.json` file.
 Once added, you can access `cakex` from your `Cakefile` with a simple
 require invocation:
 
-    require 'cakex'
+    require "cakex"
 
 
 globals that `cakex` adds
@@ -34,7 +34,7 @@ globals that `cakex` adds
 
 * Adds the `cakex` exported functions.  See below for more on these functions
 
-* Adds a global function for every "script" in your
+* Adds a function for every "script" in your
   `node_modules/.bin` directory.  Any characters in those script names, which
   are not valid in JavaScript identifiers, will be converted to underscores,
   so you can reference them easily.  Any script names that still aren't legal
@@ -83,7 +83,7 @@ running.  When called with no argument, prints a blank line.
 The argument to this function should be an object with a `files` property and
 a `run` property.
 
-The `files` property should be a `[gaze](https://www.npmjs.com/package/gaze)`
+The `files` property should be a [`gaze`](https://www.npmjs.com/package/gaze)
 pattern argument (string or array of strings).
 
 The `run` property is a function that will be called when a file matching
@@ -94,21 +94,22 @@ The watch will not respond to any other file changes until after the `run`
 function completes.
 
 
-`daemon.start(pidFile, program, args, options={})`
+`daemon.start(handle, program, args, options={})`
 ---------------------------------------
 
 This function starts a background process with the `child_process.spawn()`
-function. The first argument should be the name of a file to write the pid of
-the process into (for later use with `daemon.kill()`).  The remaining arguments
-are the same as for the `child_process` function
+function, ensuring only one instance of the program
+will be running for each unique handle. The first argument should be a handle
+to refer to this server, for later use with `daemon.start()` or `daemon.kill()`.
+The remaining arguments are the same as for the `child_process` function
 [`spawn()`](http://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options).
 
-`daemon.start()` will first called `daemon.kill()` with the same `pidFile`, to
+`daemon.start()` will first call `daemon.kill()` with the same `handle`, to
 ensure that an earlier invocation of the process is killed before the new
 one starts.
 
 
-`daemon.kill(pidFile, cb)`
+`daemon.kill(handle, cb)`
 ---------------------------------------
 
 This function will kill a background process started with `daemon.start()`.  If
