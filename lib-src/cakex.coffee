@@ -4,7 +4,6 @@ fs   = require "fs"
 path = require "path"
 
 _      = require "underscore"
-coffee = require "coffee-script"
 require "shelljs/global"
 
 pkg    = require "../package.json"
@@ -13,14 +12,18 @@ watch  = require "./watch"
 
 cakex = exports
 
+PROGRAM = path.relative(process.cwd(), require.main.filename)
+
 #-------------------------------------------------------------------------------
 main = ->
-  coffee.register()
+  exports._                     = _
+  exports.fs                    = fs
+  exports.path                  = path
 
-  exports.daemon                = daemon
-  exports.watch                 = watch.watch
-  exports.defineModuleFunctions = defineModuleFunctions
   exports.log                   = log
+  exports.watch                 = watch.watch
+  exports.daemon                = daemon
+  exports.defineModuleFunctions = defineModuleFunctions
 
   for name, val of exports
     global[name] = val
@@ -35,12 +38,19 @@ defineModuleFunctions = (dir) ->
 
   scripts = getNodeModulesScripts nodeModulesBin
 
-  for script in scripts
-      sanitizedName         = sanitizeFunctionName script
-      global[script]        = invokeNodeModuleScript nodeModulesBin, script
-      global[sanitizedName] = global[script]
+  for scriptName in scripts
+    sanityName = sanitizeFunctionName scriptName
+    fn         = invokeNodeModuleScript nodeModulesBin, scriptName
+
+    addGlobalFn scriptName, fn
+    addGlobalFn sanityName, fn
 
   return
+
+#-------------------------------------------------------------------------------
+addGlobalFn = (name, fn) ->
+  return if global[name]?
+  global[name] = fn
 
 #-------------------------------------------------------------------------------
 getNodeModulesScripts = (dir) ->
@@ -76,8 +86,12 @@ log = (message) ->
   if !message? or message is ""
     console.log ""
   else
-    console.log "#{pkg.name}: #{message}"
+    console.log "#{PROGRAM}: #{getTime()}: #{message}"
   return
+
+#-------------------------------------------------------------------------------
+getTime = ->
+  return new Date().toLocaleTimeString()
 
 #-------------------------------------------------------------------------------
 main()

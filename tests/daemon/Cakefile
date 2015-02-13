@@ -1,47 +1,37 @@
 # Licensed under the Apache License. See footer for details.
 
-child_process = require "child_process"
+require "../../lib/cakex"
 
-daemon = exports
+log "running test: #{path.basename path.dirname __filename}"
 
-Daemons = {}
+process.on "uncaughtException", (e) ->
+  log "uncaughtException: #{e}"
+  log e.stack
+
+waitLength = null
+#-------------------------------------------------------------------------------
+task "test", "run test", ->
+
+  waitLength = 2000
+
+  spawnWaiter()
+  setTimeout spawnWaiter, 1000
+  setTimeout spawnWaiter, 2000
+  setTimeout spawnWaiter, 3000
+  setTimeout spawnWaiter, 4000
+
+  setTimeout (-> waitLength = 500), 8000
+  setTimeout spawnWaiter, 10000
+  setTimeout spawnWaiter, 11000
+  setTimeout spawnWaiter, 12000
+  setTimeout spawnWaiter, 13000
+
 
 #-------------------------------------------------------------------------------
-daemon.start = (handle, program, args, options={}) ->
-  daemon.kill handle, ->
-
-    options.stdio ?= "inherit"
-
-    serverProcess = child_process.spawn program, args, options
-
-    Daemons[handle] = serverProcess
-
-    # log "daemon.start: started #{serverProcess.pid}"
-
-    serverProcess.on "exit", ->
-      delete Daemons[handle]
-      # log "daemon.start: exited  #{serverProcess.pid}"
-
-  return
-
-#-------------------------------------------------------------------------------
-daemon.kill = (handle, cb) ->
-  serverProcess = Daemons[handle]
-
-  unless serverProcess?
-    cb() if cb?
-    return
-
-  delete Daemons[handle]
-
-  serverProcess.on "exit", ->
-    # log "daemon.kill:  killed  #{serverProcess.pid}"
-    cb() if cb?
-
-  # log "daemon.kill:  killing #{serverProcess.pid}"
-  serverProcess.kill()
-
-  return
+count = 0
+spawnWaiter = ->
+  count++
+  daemon.start "waiter", "node", ["waiter", count, waitLength]
 
 #-------------------------------------------------------------------------------
 # Licensed under the Apache License, Version 2.0 (the "License");

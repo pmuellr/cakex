@@ -6,6 +6,7 @@ utility as a project builder, the `cakex` package may be useful to you.  It
 provides a number of useful functions to make it even easier to script your
 builds.
 
+`cakex` should be usable with other build tools as well.
 
 
 using `cakex`
@@ -16,7 +17,7 @@ Add `cakex` to your `devDependencies` property of your `package.json` file.
 Once added, you can access `cakex` from your `Cakefile` with a simple
 require invocation:
 
-    cakex = require 'cakex'
+    require 'cakex'
 
 
 globals that `cakex` adds
@@ -24,43 +25,110 @@ globals that `cakex` adds
 
 `cakex` adds a number of global functions to your running environment.
 
-First, it pulls in all of the
-[`shelljs` package](http://documentup.com/arturadib/shelljs).
+* Adds all of the functions in the
+  [`shelljs` package](http://documentup.com/arturadib/shelljs)
+  as global functions. Eg, you can use `ls()` to get a list of files.
 
-Next, it adds each of the `scripts` in your `node_modules/.bin` directory as
-functions.  Any characters in those script names, which are not valid in
-JavaScript identifiers, will be converted to underscores, so you can reference
-them directly.  Any script names that still aren't legal
-JavaScript identifiers will need to be accessed from the `global`
-variable.  
+* Adds `fs`, `path`, and `_` as global variables, whose values are
+  `require("fs")`, `require("path")`, and `require("underscore")`.
 
-For example, access the script `6to5` as `global['6to5']`.
+* Adds the `cakex` exported functions.  See below for more on these functions
 
-The script functions are invocations of the `shelljs` function
-[`exec()`](http://documentup.com/arturadib/shelljs#command-reference/exec-command-options-callback)
-with the arguments passed to the functions appended to the script name. For
-example, if you call:
+* Adds a global function for every "script" in your
+  `node_modules/.bin` directory.  Any characters in those script names, which
+  are not valid in JavaScript identifiers, will be converted to underscores,
+  so you can reference them easily.  Any script names that still aren't legal
+  JavaScript identifiers will need to be accessed from the `global`
+  variable. Eg, access the script `6to5` as `global['6to5']`.
 
-    `browserify "foo"`
+  The script functions are invocations of the `shelljs` function
+  [`exec()`](http://documentup.com/arturadib/shelljs#command-reference/exec-command-options-callback)
+  with the arguments passed to the functions appended to the script name. For
+  example, if you call:
 
-it will be invoked as:
+      browserify "foo"
 
-    exec("node node_modules/.bin/browserify foo")
+  it will be invoked as:
 
-You may also pass valid additional `exec()` arguments to the script functions.
-For example, if you call:
+      exec("node node_modules/.bin/browserify foo")
 
-    browserify "foo", {silent: true}
+  You may also pass valid additional `exec()` arguments to the script functions.
+  For example, if you call:
 
-it will be invoked as:
+      browserify "foo", {silent: true}
 
-    exec("node node_modules/.bin/browserify foo", {silent: true})
+  it will be invoked as:
+
+      exec("node node_modules/.bin/browserify foo", {silent: true})
 
 
 
-functions available within `cakex`
+`cakex` exported functions
 ================================================================================
 
+The following functions are exported from the `cakex` module, but also available
+as globals.
+
+
+`log(string)`
+---------------------------------------
+
+Writes a string to the console, prefixed by the name of the main program
+running.  When called with no argument, prints a blank line.
+
+
+`watch({files: gazeSpec, run: fn})`
+---------------------------------------
+
+The argument to this function should be an object with a `files` property and
+a `run` property.
+
+The `files` property should be a `[gaze](https://www.npmjs.com/package/gaze)`
+pattern argument (string or array of strings).
+
+The `run` property is a function that will be called when a file matching
+the `files` patterns changes.  The function will be called with `this` set
+to the argument of the `watch()` function.  
+
+The watch will not respond to any other file changes until after the `run`
+function completes.
+
+
+`daemon.start(pidFile, program, args, options={})`
+---------------------------------------
+
+This function starts a background process with the `child_process.spawn()`
+function. The first argument should be the name of a file to write the pid of
+the process into (for later use with `daemon.kill()`).  The remaining arguments
+are the same as for the `child_process` function
+[`spawn()`](http://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options).
+
+`daemon.start()` will first called `daemon.kill()` with the same `pidFile`, to
+ensure that an earlier invocation of the process is killed before the new
+one starts.
+
+
+`daemon.kill(pidFile, cb)`
+---------------------------------------
+
+This function will kill a background process started with `daemon.start()`.  If
+a callback is passed, it will be invoked when the process has been killed (or
+as near as we can guess).
+
+
+`defineModuleFunctions(dir)`
+---------------------------------------
+
+This function will add scripts from a `node_modules/.bin` directory as global
+functions, just as is done with with the `node_modules/.bin` in your current
+directory by default.  In fact, those globals are added by invoking
+`defineModuleFunctions(".")` when `cakex` starts.
+
+If you have other `node_modules` directories that you'd like to add tools from,
+you can do that with this function.
+
+The argument to this function should be the directory that contains the relevant
+`node_modules` directory.
 
 
 

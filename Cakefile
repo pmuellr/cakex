@@ -5,10 +5,10 @@ cakex = require "./lib/cakex"
 #-------------------------------------------------------------------------------
 task "watch", "watch for changes, build, test", ->
 
-  log "starting watches"
+  onChanged()
 
   watch
-    files: "lib-src/**/*.coffee"
+    files: ["lib-src/**/*.coffee", "tests/**/*"]
     run:   onChanged
 
   watch
@@ -18,21 +18,39 @@ task "watch", "watch for changes, build, test", ->
       log "Cakefile changed, exiting"
       process.exit 0
 
+
 #-------------------------------------------------------------------------------
 onChanged = ->
   invoke "build"
   invoke "test"
 
-  log ls()
-
 #-------------------------------------------------------------------------------
 task "build", "build JavaScript from CoffeeScript", ->
+  log "building ..."
+
   cleanDir "lib"
   coffee "--bare --compile --map --output lib lib-src/*.coffee"
 
 #-------------------------------------------------------------------------------
 task "test", "run tests", ->
-  log "test: TBD"
+  log "testing ..."
+
+  origDir = pwd()
+
+  try
+    cd "tests/daemon"
+
+    cd "../modfns"
+    exec "../../node_modules/.bin/cake test"
+
+    cd "../watch"
+    exec "../../node_modules/.bin/cake test"
+
+    cd "../daemon"
+    exec "../../node_modules/.bin/cake test"
+
+  finally
+    cd origDir
 
 #-------------------------------------------------------------------------------
 cleanDir = (dir) ->

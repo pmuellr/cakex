@@ -1,47 +1,29 @@
 # Licensed under the Apache License. See footer for details.
 
-child_process = require "child_process"
+require "../../lib/cakex"
 
-daemon = exports
-
-Daemons = {}
+log "running test: #{path.basename path.dirname __filename}"
 
 #-------------------------------------------------------------------------------
-daemon.start = (handle, program, args, options={}) ->
-  daemon.kill handle, ->
+task "test", "run test", ->
 
-    options.stdio ?= "inherit"
+  fail() if global.cake
 
-    serverProcess = child_process.spawn program, args, options
+  defineModuleFunctions "../.."
 
-    Daemons[handle] = serverProcess
+  pass() if global.cake
 
-    # log "daemon.start: started #{serverProcess.pid}"
-
-    serverProcess.on "exit", ->
-      delete Daemons[handle]
-      # log "daemon.start: exited  #{serverProcess.pid}"
-
-  return
+  fail()
 
 #-------------------------------------------------------------------------------
-daemon.kill = (handle, cb) ->
-  serverProcess = Daemons[handle]
+pass = ->
+  log "PASS"
+  exit()
 
-  unless serverProcess?
-    cb() if cb?
-    return
-
-  delete Daemons[handle]
-
-  serverProcess.on "exit", ->
-    # log "daemon.kill:  killed  #{serverProcess.pid}"
-    cb() if cb?
-
-  # log "daemon.kill:  killing #{serverProcess.pid}"
-  serverProcess.kill()
-
-  return
+#-------------------------------------------------------------------------------
+fail = ->
+  log "FAIL"
+  exit()
 
 #-------------------------------------------------------------------------------
 # Licensed under the Apache License, Version 2.0 (the "License");

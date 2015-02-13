@@ -9,7 +9,9 @@ Gaze = require("gaze").Gaze
 cakex = require("./cakex")
 
 #-------------------------------------------------------------------------------
-exports.watch = ({files, run}) ->
+exports.watch = (watchObject) ->
+  {files, run} = watchObject
+
   gaze = new Gaze(files)
 
   #------------------------------------
@@ -24,10 +26,10 @@ exports.watch = ({files, run}) ->
     if file?
       cakex.log "----------------------------------------------------"
       file = path.relative process.cwd(), file
-      cakex.log "file changed: #{file} on #{new Date}"
+      cakex.log "file changed: #{file} on #{getTime()}"
 
     try
-      run file
+      run.apply watchObject, [file]
     catch err
       cakex.log "error running watch function: #{err}"
       cakex.log err.stack
@@ -44,6 +46,10 @@ countWatched = (rFiles) ->
     count += files.length
 
   return count
+
+#-------------------------------------------------------------------------------
+getTime = ->
+  return new Date().toLocaleTimeString()
 
 #-------------------------------------------------------------------------------
 # Licensed under the Apache License, Version 2.0 (the "License");
