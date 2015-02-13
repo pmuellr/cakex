@@ -1,6 +1,6 @@
 {
   "name":               "cakex",
-  "version":            "0.1.0",
+  "version":            "0.1.1",
   "description":        "extended functionality for cake",
   "author":             "pmuellr",
   "main":               "lib/cakex",

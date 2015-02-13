@@ -6,6 +6,16 @@ daemon = exports
 
 Daemons = {}
 
+process.on "uncaughtException", (err) ->
+  log "uncaughtException: #{err}"
+  log e.stack
+
+process.on "exit",              -> killAll()
+process.on "SIGTERM",           -> killAll()
+process.on "SIGINT",            -> killAll()
+process.on "SIGBREAK",          -> killAll()
+process.on "uncaughtException", -> killAll()
+
 #-------------------------------------------------------------------------------
 daemon.start = (handle, program, args, options={}) ->
   daemon.kill handle, ->
@@ -42,6 +52,13 @@ daemon.kill = (handle, cb) ->
   serverProcess.kill()
 
   return
+
+#-------------------------------------------------------------------------------
+killAll = ->
+  for handle, serverProcess of Daemons
+    serverProcess.kill()
+
+  exit()
 
 #-------------------------------------------------------------------------------
 # Licensed under the Apache License, Version 2.0 (the "License");
