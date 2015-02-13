@@ -16,11 +16,11 @@
     "url" :             "https://github.com/pmuellr/cakex.git"
   },
   "dependencies": {
-    "coffee-script":    "1.9.x",
     "gaze":             "0.5.x",
     "shelljs":          "0.3.x",
     "underscore":       "1.7.x"
   },
   "devDependencies": {
+    "coffee-script":    "1.9.x"
   }
 }
