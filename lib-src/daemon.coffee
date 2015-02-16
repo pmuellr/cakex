@@ -8,7 +8,7 @@ Daemons = {}
 
 process.on "uncaughtException", (err) ->
   log "uncaughtException: #{err}"
-  log e.stack
+  log err.stack
 
 process.on "exit",              -> killAll()
 process.on "SIGTERM",           -> killAll()
